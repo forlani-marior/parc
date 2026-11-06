@@ -1,0 +1,15 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import ServiceGrid from '../../components/ServiceGrid.astro';
+import Callout from '../../components/Callout.astro';
+import Icon from '../../components/Icon.astro';
+import { photos, business } from '../../lib/content';
+---
+<Layout title="Repair, Paint and Servicing | PARC Ennis" description="Explore PARC’s crash repairs, bodywork, spray painting, mechanical servicing, diagnostics, insurance help and recovery in Ennis.">
+  <PageIntro label="Our services" title="Here to get you back on the road" text="From the first estimate to the finishing touches, speak directly to the people who’ll look after your vehicle." photo={photos.bays} cta="Request an Estimate" ctaHref="/contact/#estimate" />
+  <section class="section dark-section services-page-grid"><div class="wrap"><SectionLabel text="Find the right service" /><ServiceGrid /></div></section>
+  <section class="section"><div class="wrap article-split"><div><SectionLabel text="A useful first step" /><h2>Unsure where to start<span>?</span></h2></div><div class="prose"><p>Tell us what happened and what you need help with. If the vehicle needs to be moved, call to discuss recovery before arranging to bring it in.</p><a class="text-link" href={'tel:' + business.recoveryTel}><Icon name="phone" size={18} /> Out-of-hours recovery: {business.recovery}</a><a class="text-link" href="/advice/">Read our repair guide <Icon name="external" size={18} /></a></div></div></section>
+  <Callout />
+</Layout>

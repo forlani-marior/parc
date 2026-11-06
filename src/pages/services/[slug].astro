@@ -1,0 +1,24 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import Callout from '../../components/Callout.astro';
+import Icon from '../../components/Icon.astro';
+import { business, services } from '../../lib/content';
+export function getStaticPaths() {
+  return services.map(service => ({ params: { slug: service.slug }, props: { service } }));
+}
+const { service } = Astro.props;
+---
+<Layout title={service.title + ' in Ennis | PARC'} description={service.intro} image={'/assets/' + service.photo.file + '.webp'}>
+  <PageIntro crumb="Services" label={service.label} title={service.title} text={service.intro} photo={service.photo} cta="Request an Estimate" ctaHref={'/contact/?service=' + service.slug + '#estimate'} />
+  <section class="section"><div class="wrap service-detail">
+    <aside><SectionLabel number={service.num} text="On this page" /><nav aria-label="Service topics">{service.sections.map(section => <a href={'#' + section.id}>{section.title}<Icon name="down" size={15} /></a>)}</nav>
+    {service.slug === 'customer-support' && <a class="text-link" href={'tel:' + business.recoveryTel}><Icon name="phone" size={19} /> {business.recovery}</a>}</aside>
+    <div class="service-body">
+      {service.sections.map((section, i) => <section id={section.id}><span class="mono">0{i + 1} /</span><h2>{section.title}<span>.</span></h2><p>{section.body}</p></section>)}
+      <a class="text-link" href={service.next.href}>{service.next.label} <Icon name="external" size={18} /></a>
+    </div>
+  </div></section>
+  <Callout />
+</Layout>
