@@ -60,7 +60,7 @@
 }
 
 .film-image > img,
-.film-image > video {
+.film-image > canvas {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -68,8 +68,8 @@
   object-fit: contain;
 }
 
-.film-image > video { visibility: hidden; pointer-events: none; }
-.film-ready .film-image > video { visibility: visible; }
+.film-image > canvas { visibility: hidden; pointer-events: none; }
+.film-ready .film-image > canvas { visibility: visible; }
 
 .film-shade {
   position: absolute;
