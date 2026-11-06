@@ -1,0 +1,15 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import Callout from '../../components/Callout.astro';
+import Icon from '../../components/Icon.astro';
+import { localFeedback } from '../../lib/content';
+---
+<Layout title="Customer Feedback | PARC Ennis" description="Read about the feedback PARC has received from motorists and businesses in Ennis and the surrounding towns.">
+  <PageIntro warm label="Customer feedback" title="What our customers say" text="A look back at the experiences that local motorists and businesses shared with PARC." />
+  <section class="section"><div class="wrap">
+    <div class="feedback-grid">{localFeedback.map(item => <article><Icon name="pin" size={22} /><h3>{item.place}</h3><p>{item.detail}</p></article>)}</div>
+    <p class="archive-note">The original feedback also includes comments from dealerships and fleet customers about the quality of work and time off the road. Individual quotes and names can be added once permission has been confirmed.</p>
+  </div></section>
+  <Callout />
+</Layout>
