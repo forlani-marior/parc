@@ -1,0 +1,36 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import Photo from '../../components/Photo.astro';
+import Callout from '../../components/Callout.astro';
+import Icon from '../../components/Icon.astro';
+import { photos } from '../../lib/content';
+---
+<Layout title="Our Story | PARC Ennis" description="Read how PARC grew from roots in the Ennis motor trade dating to 1989 into the family-run accident repair centre established in 2011.">
+  <PageIntro warm label="About PARC" title="Our Story" text="Proudly Serving Ennis and County Clare." photo={photos.premises} />
+  <section class="section"><div class="wrap article-split">
+    <div><SectionLabel number="01" text="Our beginnings" /><h2>Local roots.<br />Skilled hands<span>.</span></h2></div>
+    <div class="prose"><p>PARC opened in September 2011 as a family-run repair centre. The business drew on experience of trading in the Ennis area going back to 1989, bringing skilled colleagues back together in a new workshop on Quin Road.</p><p>That continuity mattered. People already knew the workmanship and the service they could expect, and the team could build on relationships with local motorists and trade partners.</p><div class="archive-brand"><img src="/assets/parc-original-mark.webp" width="192" height="43" alt="The original blue PARC wordmark with a classic car emblem" loading="lazy" /><span class="mono">Original PARC mark</span></div></div>
+  </div></section>
+  <section class="section soft-section"><div class="wrap meet-grid">
+    <div><SectionLabel number="02" text="A local business, built on trust" /><h2>People know<br />where to find us<span>.</span></h2><p class="lede">From a scuffed bumper to the aftermath of a collision, the first thing most people need is someone they can speak to. We take time to explain the options, and we’re still here to answer questions when you collect your vehicle.</p></div>
+    <Photo photo={photos.desk} />
+  </div></section>
+  <section class="section"><div class="wrap">
+    <div class="section-head"><div><SectionLabel number="03" text="Our people" /><h2>The people behind PARC<span>.</span></h2></div><p>Good repair work takes people who know their craft, share what they know and care how each vehicle leaves the workshop.</p></div>
+    <div class="photo-grid"><Photo photo={photos.archive} /><div class="photo-placeholder"><Icon name="image" size={29} /><strong>Current team photographs</strong><span>Space for client-supplied portraits.</span></div></div>
+  </div></section>
+  <section class="section philosophy dark-section"><div class="wrap article-split">
+    <div><SectionLabel number="04" text="Our philosophy" /><h2>Right<br />First Time<span>.</span></h2></div><div class="prose"><p>Care at the start makes a difference at the end. We take the time to understand the damage, plan the repair and check the details that matter before handing back the keys.</p><p>It’s an approach that carries through to customer service too: explain the work clearly, stay approachable and take pride in a job done well.</p></div>
+  </div></section>
+  <section class="section" id="workshop"><div class="wrap">
+    <div class="section-head"><div><SectionLabel number="05" text="Our workshop" /><h2>Through the workshop doors<span>.</span></h2></div><p>Photographs from PARC’s own archive, showing the reception, bodyshop, paint bay and equipment at Quin Road.</p></div>
+    <div class="photo-grid"><Photo photo={photos.alignment} /><Photo photo={photos.bays} /><Photo photo={photos.paintPrep} /><Photo photo={photos.paintMix} /><Photo photo={photos.paintBay} /><Photo photo={photos.reception} /></div>
+  </div></section>
+  <section class="section soft-section" id="journey"><div class="wrap article-split">
+    <div><SectionLabel number="06" text="Our journey" /><h2>A history in Ennis<span>.</span></h2></div>
+    <ol class="timeline"><li><strong>1989</strong><div><h3>Roots in the local motor trade</h3><p>The trading experience behind PARC began in the Ennis area.</p></div></li><li><strong>2011</strong><div><h3>PARC opens on Quin Road</h3><p>The family-run repair centre was established in September, reuniting experienced colleagues.</p></div></li></ol>
+  </div></section>
+  <Callout title="Drop in and say hello" detail="You’ll find us at Quin Road Business Park in Ennis." />
+</Layout>
