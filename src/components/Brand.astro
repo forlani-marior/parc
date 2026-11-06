@@ -1,0 +1,7 @@
+---
+const { footer = false } = Astro.props;
+---
+<a class:list={['brand', { 'brand--footer': footer }]} href="/" aria-label="PARC · Home">
+  <span class="brand-word" aria-hidden="true"><i></i>PARC<span>.</span></span>
+  <span class="brand-name">Perfect Accident<br />Repair Centre</span>
+</a>

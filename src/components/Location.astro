@@ -1,0 +1,42 @@
+---
+import { business } from '../lib/content';
+import SectionLabel from './SectionLabel.astro';
+import Icon from './Icon.astro';
+const { compact = false } = Astro.props;
+---
+<section class:list={['location section', { 'location--compact': compact }]} id="visit">
+  <div class="wrap location-grid">
+    <div>
+      <SectionLabel number={compact ? undefined : '07'} text="Find us" />
+      <h2>Visit us<br />in Ennis<span>.</span></h2>
+      <div class="location-details">
+        <div><Icon name="pin" /><address>Units 5 &amp; 6, Block F<br />Quin Road Business Park<br />Ennis, Co. Clare · {business.eircode}</address></div>
+        <div><Icon name="clock" /><span>{business.hours}</span></div>
+        <div><Icon name="phone" /><a href={'tel:' + business.tel}>{business.phone}</a></div>
+        <div><Icon name="mail" /><a href={'mailto:' + business.email}>{business.email}</a></div>
+      </div>
+      <a class="button button--ink" href={business.directions} target="_blank" rel="noopener noreferrer">Get directions <Icon name="external" /></a>
+    </div>
+    <div class="map-card" data-map={business.map}>
+      <div class="map-cover">
+        <span class="map-coordinate mono">52.836597° N &nbsp; / &nbsp; 8.969200° W</span>
+        <div class="map-target" aria-hidden="true"><span><Icon name="pin" size={33} /></span></div>
+        <div class="map-caption"><div><strong>Quin Road</strong><span class="mono">Ennis · County Clare</span></div><button class="button button--outline" type="button" data-load-map>Load map <Icon name="external" /></button></div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-load-map]').forEach(button => {
+    button.addEventListener('click', () => {
+      const card = button.closest<HTMLElement>('[data-map]');
+      if (!card?.dataset.map) return;
+      const map = document.createElement('iframe');
+      map.src = card.dataset.map;
+      map.title = 'Map showing PARC on Quin Road, Ennis';
+      map.referrerPolicy = 'no-referrer';
+      card.replaceChildren(map);
+      map.focus();
+    });
+  });
+</script>

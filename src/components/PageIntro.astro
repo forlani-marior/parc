@@ -1,0 +1,18 @@
+---
+import Icon from './Icon.astro';
+import Photo from './Photo.astro';
+import SectionLabel from './SectionLabel.astro';
+import type { Photo as PhotoData } from '../lib/content';
+const { label, title, text, photo, cta, ctaHref, crumb, warm = false } = Astro.props as {
+  label: string; title: string; text: string; photo?: PhotoData; cta?: string; ctaHref?: string; crumb?: string; warm?: boolean;
+};
+---
+<section class:list={['page-intro', { 'page-intro--photo': !!photo, 'page-intro--warm': warm }]}>
+  <div class="wrap">
+    <nav class="crumb mono" aria-label="Breadcrumb"><a href="/">Home</a><Icon name="chevron" size={13} />{crumb && <><a href="/services/">Services</a><Icon name="chevron" size={13} /></>}<span aria-current="page">{label}</span></nav>
+    <div class="page-intro-grid">
+      <div><SectionLabel text={label} /><h1>{title}<span>.</span></h1><p>{text}</p>{cta && <a class:list={['button', warm ? 'button--ink' : 'button--red']} href={ctaHref}>{cta} <Icon name="external" /></a>}</div>
+      {photo && <Photo photo={photo} eager />}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,97 @@
+---
+import '../styles/global.css';
+import Brand from './Brand.astro';
+import Icon from './Icon.astro';
+import { business } from '../lib/content';
+const { title, description, image = '/assets/parc-premises.webp', home = false } = Astro.props;
+const current = Astro.url.pathname;
+const origin = Astro.site || new URL('https://www.parc.ie');
+const canonical = new URL(current, origin);
+const preview = import.meta.env.PUBLIC_PARC_LAUNCH !== 'true';
+const links = [
+  { href: '/', text: 'Home' }, { href: '/about/', text: 'About Us' },
+  { href: '/services/', text: 'Services' }, { href: '/our-work/', text: 'Our Work' },
+  { href: '/contact/', text: 'Contact' },
+];
+const schema = {
+  '@context': 'https://schema.org', '@type': 'AutoBodyShop',
+  name: business.name, alternateName: 'PARC', url: origin.href,
+  telephone: business.tel, email: business.email, image: new URL(image, origin).href,
+  address: { '@type': 'PostalAddress', streetAddress: 'Units 5 & 6, Block F, Quin Road Business Park', addressLocality: 'Ennis', addressRegion: 'County Clare', postalCode: business.eircode, addressCountry: 'IE' },
+  geo: { '@type': 'GeoCoordinates', latitude: 52.836597, longitude: -8.9692 },
+  areaServed: ['Ennis', 'County Clare'],
+  openingHours: 'Mo-Fr 08:00-17:00',
+};
+---
+<!doctype html>
+<html lang="en-IE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#101011" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    {preview && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:site_name" content="PARC · Perfect Accident Repair Centre" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_IE" />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={new URL(image, origin).href} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/assets/manrope.woff2" as="font" type="font/woff2" crossorigin />
+    {home && <link rel="preload" href="/assets/toyota-poster.webp" as="image" />}
+    {home && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+    <noscript><style>.film{height:auto!important}.film-sticky{position:relative!important}.film-actions,.film-progress,.menu-toggle{display:none!important}.main-nav{display:flex!important;position:static!important;background:none!important}.site-head{position:absolute!important}</style></noscript>
+  </head>
+  <body class:list={{ 'page-home': home }}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-head">
+      <div class="head-inner">
+        <Brand />
+        {home ? <p class="film-masthead mono">Ennis, Co. Clare <span class="film-masthead-year">Since 2011</span></p> : <>
+        <nav id="main-navigation" class="main-nav" aria-label="Main navigation">
+          {links.map(link => {
+            const active = link.href === '/' ? current === '/' : current.startsWith(link.href);
+            return <a href={link.href} class:list={{ 'is-current': active }} aria-current={current === link.href ? 'page' : undefined}>{link.text}</a>;
+          })}
+          <a class="button button--red mobile-estimate" href="/contact/#estimate">Request an Estimate <Icon name="external" size={17} /></a>
+        </nav>
+        <a class="button button--red head-cta" href="/contact/#estimate">Request an Estimate <Icon name="external" size={17} /></a>
+        <button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="main-navigation"><span></span><span></span></button>
+        </>}
+      </div>
+    </header>
+    <main id="main" tabindex="-1"><slot /></main>
+    {!home && <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand"><Brand footer /><p>Family-run accident repair centre in Ennis, County Clare.</p></div>
+          <div><p class="mono footer-title">Explore</p><a href="/about/">Our Story</a><a href="/services/">Services</a><a href="/our-work/">Our Work</a><a href="/advice/">Repair advice</a></div>
+          <div><p class="mono footer-title">Speak to us</p><a href={'tel:' + business.tel}>{business.phone}</a><a href={'mailto:' + business.email}>{business.email}</a><a href={'tel:' + business.recoveryTel}>Recovery: {business.recovery}</a><a href="/contact/">Contact &amp; directions</a></div>
+          <div><p class="mono footer-title">Visit the workshop</p><address>Units 5 &amp; 6, Block F<br />Quin Road Business Park<br />Ennis, Co. Clare · {business.eircode}</address><p>{business.hours}</p></div>
+        </div>
+        <div class="footer-base"><span>© {new Date().getFullYear()} {business.name} · CRO 500593</span><a href="/privacy/">Privacy notice</a></div>
+      </div>
+    </footer>}
+    <script>
+      const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+      const nav = document.querySelector<HTMLElement>('#main-navigation');
+      const setMenu = (open: boolean) => {
+        toggle?.setAttribute('aria-expanded', String(open));
+        toggle?.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        nav?.classList.toggle('is-open', open);
+      };
+      toggle?.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+      nav?.addEventListener('click', event => { if ((event.target as Element).closest('a')) setMenu(false); });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
+          setMenu(false); toggle.focus();
+        }
+      });
+      matchMedia('(min-width: 901px)').addEventListener('change', event => { if (event.matches) setMenu(false); });
+    </script>
+  </body>
+</html>

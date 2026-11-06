@@ -1,0 +1,12 @@
+---
+import Icon from './Icon.astro';
+import SectionLabel from './SectionLabel.astro';
+import { business } from '../lib/content';
+const { title = 'Let’s talk about your vehicle', detail = 'Tell us what happened, or call the workshop and we’ll talk you through the next step.' } = Astro.props;
+---
+<section class="section callout dark-section">
+  <div class="wrap section-head">
+    <div><SectionLabel text="Speak to PARC" /><h2>{title}<span>.</span></h2><p>{detail}</p></div>
+    <div class="callout-actions"><a class="button button--red" href="/contact/#estimate">Request an Estimate <Icon name="external" /></a><a class="text-link" href={'tel:' + business.tel}><Icon name="phone" size={18} /> {business.phone}</a></div>
+  </div>
+</section>

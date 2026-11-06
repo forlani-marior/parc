@@ -1,0 +1,8 @@
+---
+import type { Photo } from '../lib/content';
+const { photo, caption = true, eager = false, class: className = '' } = Astro.props as { photo: Photo; caption?: boolean; eager?: boolean; class?: string };
+---
+<figure class:list={['photo', className]}>
+  <img src={'/assets/' + photo.file + '.webp'} width={photo.width} height={photo.height} alt={photo.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+  {caption && <figcaption><span>{photo.label}</span><span>PARC archive</span></figcaption>}
+</figure>
