@@ -1,0 +1,16 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import { business } from '../../lib/content';
+const preview = import.meta.env.PUBLIC_PARC_LAUNCH !== 'true';
+---
+<Layout title="Privacy Notice | PARC Ennis" description="How the PARC website handles estimate enquiries, contact details, photographs and maps.">
+  <PageIntro warm label="Your information" title="Privacy notice" text="How to contact PARC about information you share with us." />
+  <section class="section"><div class="wrap legal prose">
+    <h2>Who to contact</h2><p>Perfect Accident Repair Centre Ltd., Units 5 &amp; 6, Block F, Quin Road Business Park, Ennis, Co. Clare, V95 HV18. Email <a href={'mailto:' + business.email}>{business.email}</a> if you have questions about your information.</p>
+    <h2>Enquiries and photographs</h2><p>We use the details you send to respond to your enquiry and discuss any estimate, repair or related service you ask about. Only send photographs needed to show the vehicle damage. Please avoid including faces, documents or unrelated registration numbers.</p>
+    {preview && <p>In this preview, the estimate form prepares a draft in your own email application. The website does not receive the form entries or upload your photograph. You decide whether to send the draft and any attachment.</p>}
+    <h2>Maps and external sites</h2><p>The interactive map connects to OpenStreetMap when you choose to load it. The directions link opens Google Maps. Those providers handle information about your connection under their own privacy policies.</p>
+    <h2>Your rights</h2><p>You can contact us about access to or correction of your information and any other data protection request. You can also contact Ireland’s <a href="https://www.dataprotection.ie/">Data Protection Commission</a>.</p>
+  </div></section>
+</Layout>
