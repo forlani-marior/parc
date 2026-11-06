@@ -45,8 +45,13 @@ assert.equal(sceneLinks.length, 5, 'Five chapters');
 assert.ok(sceneLinks.every(link => /\shidden[\s>]/.test(link)), 'Scrolling reveals chapter links');
 assert.match(home, /data-chapter-cta[^>]*href="\/about\/"[^>]*>\s*Discover Our Story/);
 assert.doesNotMatch(home, /<footer\b|id="meet-parc"|<nav\b/);
-assert.doesNotMatch(home, /<video[^>]*\bautoplay\b/);
+assert.match(home, /<canvas width="960" height="540"/);
+assert.doesNotMatch(home, /<video\b/);
+for (let sheet = 0; sheet < 25; sheet++) {
+  const file = 'assets/film/frames-' + String(sheet).padStart(2, '0') + '.webp';
+  assert.ok(files.has(file), file + ' missing');
+}
 const video = await stat(new URL('assets/toyota-yaris-cross.mp4', dist));
 assert.ok(video.size > 1_000_000 && video.size < 6_000_000, 'Optimised video should be below 6 MB');
 for (const name of ['sitemap.xml', 'robots.txt', '_redirects', '.htaccess']) assert.ok(files.has(name), name + ' missing');
-console.log('Verified ' + routes.length + ' pages, ' + inspected + ' local references, seven legacy fallbacks, and the scroll video assets.');
+console.log('Verified ' + routes.length + ' pages, ' + inspected + ' local references, seven legacy fallbacks, and the scroll animation assets.');
