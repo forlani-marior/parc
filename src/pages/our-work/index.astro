@@ -1,0 +1,18 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import Callout from '../../components/Callout.astro';
+import Icon from '../../components/Icon.astro';
+import Photo from '../../components/Photo.astro';
+import { photos } from '../../lib/content';
+---
+<Layout title="Our Work | PARC Ennis" description="See PARC’s original workshop photographs, repairs in progress and vehicles from the Ennis repair centre’s archive.">
+  <PageIntro label="The PARC archive" title="Our Work" text="A look at real vehicles, everyday repairs and specialist work photographed at our workshop in Ennis." photo={photos.mercedes} />
+  <section class="section"><div class="wrap">
+    <div class="section-head"><div><SectionLabel number="01" text="In the workshop" /><h2>A closer look at the work<span>.</span></h2></div><p>From family cars to fleet and specialist vehicles, the original gallery shows the range of work that has come through our doors.</p></div>
+    <div class="photo-grid">{[photos.collision, photos.paintPrep, photos.bmw, photos.rally, photos.classic, photos.ambulance, photos.diagnostics, photos.recovery].map(photo => <Photo photo={photo} />)}</div>
+  </div></section>
+  <section class="section soft-section"><div class="wrap"><div class="section-head"><div><SectionLabel number="02" text="Before and after" /><h2>From damage to repair<span>.</span></h2></div><p>Matched photographs from the same repair will be added when PARC supplies approved examples.</p></div><div class="photo-grid">{['Before the repair', 'After the repair'].map(label => <div class="photo-placeholder"><Icon name="image" size={30} /><strong>{label}</strong><span>Space for a client-supplied photograph.</span></div>)}</div></div></section>
+  <Callout />
+</Layout>
