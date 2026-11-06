@@ -1,0 +1,97 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import Icon from '../../components/Icon.astro';
+import Location from '../../components/Location.astro';
+import { business, services } from '../../lib/content';
+const setting = import.meta.env.PUBLIC_PARC_ESTIMATE_ENDPOINT || '';
+const endpoint = /^\/(?!\/)[\w/-]+(?:\.php)?\/?$/.test(setting) ? setting : '';
+if (import.meta.env.PUBLIC_PARC_LAUNCH === 'true' && !endpoint) {
+  throw new Error('Configure a same-origin estimate endpoint before enabling public launch.');
+}
+---
+<Layout title="Contact & Request an Estimate | PARC Ennis" description="Contact PARC in Quin Road Business Park, Ennis. Request an estimate, speak to the workshop or call for vehicle recovery.">
+  <PageIntro warm label="Get in touch" title="Contact PARC" text="Tell us what you need help with. You can also give us a ring or drop into the workshop on Quin Road." cta="Request an Estimate" ctaHref="#estimate" />
+  <section class="section contact-section" id="estimate" tabindex="-1">
+    <div class="wrap contact-grid">
+      <div><SectionLabel text="Talk to a person" /><h2>How can<br />we help<span>?</span></h2><p class="lede">If the vehicle needs to be moved, call us to discuss recovery.</p>
+        <div class="contact-methods">
+          <a href={'tel:' + business.tel}><Icon name="phone" /><span><small class="mono">Workshop</small><strong>{business.phone}</strong></span><Icon name="external" size={18} /></a>
+          <a href={'tel:' + business.recoveryTel}><Icon name="truck" /><span><small class="mono">Out-of-hours recovery</small><strong>{business.recovery}</strong></span><Icon name="external" size={18} /></a>
+          <a href={'mailto:' + business.email}><Icon name="mail" /><span><small class="mono">Email</small><strong>{business.email}</strong></span><Icon name="external" size={18} /></a>
+        </div>
+      </div>
+      <form class="estimate-form" data-estimate data-endpoint={endpoint} data-email={business.email} method="post" action={endpoint || undefined} enctype="multipart/form-data">
+        <h3>Request an estimate</h3>
+        {endpoint ? <p class="form-note">Share a few details so we can get back to you about your vehicle.</p> : <p class="form-note" id="preview-form-note"><strong>Preview:</strong> This form prepares an email in your mail app. It does not send or upload anything.</p>}
+        <p class="required-note">Fields marked * are required.</p>
+        <div class="form-grid">
+          <label>Your name *<input name="name" autocomplete="name" required maxlength="100" /></label>
+          <label>Email address *<input name="email" type="email" autocomplete="email" required maxlength="150" /></label>
+          <label>Phone number<input name="phone" type="tel" autocomplete="tel" maxlength="30" /></label>
+          <label>Vehicle make and model *<input name="vehicle" autocomplete="off" required maxlength="100" placeholder="e.g. Toyota Yaris" /></label>
+          <label>Registration (optional)<input name="registration" autocomplete="off" maxlength="18" /></label>
+          <label>Type of repair *<select name="service" required><option value="">Select a service</option>{services.map(s => <option value={s.slug}>{s.title}</option>)}<option value="other">Other / not sure</option></select></label>
+          <label class="form-wide">What needs looking at? *<textarea name="details" required maxlength="1000" rows="4" placeholder="A short description of the damage or issue"></textarea></label>
+          <label class="form-wide upload-label">Photograph (optional)<input name="photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-help" /><span id="photo-help">JPG, PNG or WebP, up to 5 MB. {endpoint ? 'Avoid including people or documents in the image.' : 'Attach the photograph in your mail app.'}</span></label>
+        </div>
+        <p class="form-privacy">Please keep insurance documents and other sensitive details out of this enquiry. See our <a href="/privacy/">privacy notice</a>.</p>
+        <button class="button button--red" type="submit" disabled={!endpoint}>{endpoint ? 'Send estimate enquiry' : 'Prepare estimate email'} <Icon name="external" size={18} /></button>
+        <p class="form-status" role="status" aria-live="polite"></p>
+        <noscript><p>In this preview, you can <a href={'mailto:' + business.email}>email PARC directly</a>.</p></noscript>
+      </form>
+    </div>
+  </section>
+  <Location compact />
+</Layout>
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-estimate]');
+  if (form) {
+    const status = form.querySelector<HTMLElement>('.form-status')!;
+    const file = form.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    const service = form.querySelector<HTMLSelectElement>('select[name="service"]')!;
+    const endpoint = form.dataset.endpoint;
+    const preset = new URLSearchParams(location.search).get('service');
+    if (preset && Array.from(service.options).some(option => option.value === preset)) service.value = preset;
+    submit.disabled = false;
+    function validateFile() {
+      const photo = file.files?.[0];
+      const error = !photo ? '' : photo.size > 5 * 1024 * 1024 ? 'Choose an image smaller than 5 MB.' : !['image/jpeg', 'image/png', 'image/webp'].includes(photo.type) ? 'Choose a JPG, PNG or WebP image.' : '';
+      file.setCustomValidity(error);
+      return !error;
+    }
+    file.addEventListener('change', () => { validateFile(); file.reportValidity(); });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!validateFile() || !form.reportValidity()) { file.reportValidity(); return; }
+      const data = new FormData(form);
+      if (!endpoint) {
+        const body = [
+          'Hello PARC, I’d like to ask about an estimate.', '',
+          'Name: ' + data.get('name'), 'Email: ' + data.get('email'), 'Phone: ' + (data.get('phone') || '—'),
+          'Vehicle: ' + data.get('vehicle'), 'Registration: ' + (data.get('registration') || '—'),
+          'Service: ' + service.selectedOptions[0].text, '', 'Details:', String(data.get('details') || ''),
+          ...(file.files?.length ? ['', 'Photograph: I will attach this to the email.'] : []),
+        ].join('\r\n');
+        status.textContent = 'Your email draft is ready to open in your mail app. If it doesn’t open, email ' + form.dataset.email + ' directly.';
+        window.location.href = 'mailto:' + form.dataset.email + '?subject=' + encodeURIComponent('Estimate enquiry for PARC') + '&body=' + encodeURIComponent(body);
+        return;
+      }
+      submit.disabled = true;
+      status.textContent = 'Sending your enquiry…';
+      try {
+        const response = await fetch(endpoint, { method: 'POST', body: data, credentials: 'same-origin', redirect: 'error', headers: { Accept: 'application/json' } });
+        const result = await response.json();
+        if (!response.ok || result?.ok !== true) throw new Error('Delivery failed');
+        form.reset();
+        status.textContent = 'Your enquiry was sent. Thank you for contacting PARC.';
+      } catch {
+        status.textContent = 'Your enquiry could not be sent. Please try again or phone the workshop.';
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+</script>
