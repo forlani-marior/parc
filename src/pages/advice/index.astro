@@ -1,0 +1,30 @@
+---
+import Layout from '../../components/Layout.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import Callout from '../../components/Callout.astro';
+const checks = [
+  ['Check that the vehicle is safe to move', 'If you are unsure about driving it, ask about recovery before bringing it to the workshop.'],
+  ['Get the damage assessed', 'An assessment helps identify what needs to be checked and which repairs might be needed.'],
+  ['Talk to your insurer', 'Check what your policy covers and what it says about selecting a repairer. We can help with information about the proposed repair.'],
+  ['Ask about the repair terms', 'Ask what is covered and how to contact us if you notice an issue after collection.'],
+  ['Compare like with like', 'Ask what each estimate includes, especially where the price or repair method differs.'],
+  ['Discuss replacement parts', 'Ask whether the estimate specifies manufacturer, aftermarket or recycled parts, and why.'],
+  ['Keep your claim details handy', 'Bring the insurer’s contact information and any claim reference when discussing an estimate.'],
+  ['Ask how the policy excess is handled', 'Confirm the amount and who it is payable to with your insurer before authorising work.'],
+  ['Check VAT arrangements if relevant', 'If the vehicle is used for business, ask your insurer or accountant what applies to your invoice.'],
+  ['Keep your paperwork', 'Read any collection note, ask about anything that is unclear and keep your copy of the paperwork.'],
+];
+const faqs = [
+  ['How do I get an estimate?', 'Call the workshop or use the estimate enquiry. We may need to inspect the vehicle before we can advise on the work and timing.'],
+  ['Can you help with insurance paperwork?', 'We can explain the repair estimate and liaise with your insurer about the work. Check your policy terms with your insurer.'],
+  ['Can I get a replacement vehicle?', 'Ask us when you book. Availability and any cover from your insurer depend on the circumstances.'],
+  ['How long will a repair take?', 'That depends on the extent of damage and parts availability. We can discuss a likely timescale after assessment.'],
+];
+---
+<Layout title="Repair Guide & FAQs | PARC Ennis" description="Practical questions to ask before a vehicle repair, plus information about estimates, claims, recovery and replacement vehicles.">
+  <PageIntro warm label="Practical advice" title="Before your vehicle is repaired" text="Ten useful things to check, drawn from PARC’s original repair guide." />
+  <section class="section" id="ten-things"><div class="wrap article-split"><div><SectionLabel text="The repair guide" /><h2>Ten things to know<span>.</span></h2></div><ol class="advice-list">{checks.map(([title, detail], i) => <li><span class="mono">{String(i + 1).padStart(2, '0')}</span><div><h3>{title}</h3><p>{detail}</p></div></li>)}</ol></div></section>
+  <section class="section soft-section" id="faqs"><div class="wrap article-split"><div><SectionLabel text="Common questions" /><h2>FAQs<span>.</span></h2></div><div class="faq-list">{faqs.map(([question, answer]) => <details><summary>{question}</summary><p>{answer}</p></details>)}</div></div></section>
+  <Callout />
+</Layout>
