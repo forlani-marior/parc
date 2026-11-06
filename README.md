@@ -10,7 +10,13 @@ npm run verify
 npm run preview
 ```
 
-Use Node 22.12 or newer. Scroll down through the homepage and back up to review the film. The first half takes the car apart, and the second half reverses the same frames to put it back together. Scroll position drives the paused film and reveals links to separate pages. The device’s reduced-motion setting removes decorative transitions. The MP4 has no audio track, uses H.264 at 24 fps with keyframes every six frames, and places the seek metadata at the front of the file. Serve it with `Content-Type: video/mp4` and HTTP byte ranges.
+Use Node 22.12 or newer. Scroll down through the homepage and back up to review the film. The first half takes the car apart, and the second half reverses the same frames to put it back together. Scroll position selects the frame drawn on the canvas and reveals links to separate pages. The device’s reduced-motion setting removes decorative transitions. The browser loads nearby WebP frame sheets as needed.
+
+To regenerate the 25 frame sheets from the ten-second MP4, run FFmpeg from the project root.
+
+```sh
+ffmpeg -y -i public/assets/toyota-yaris-cross.mp4 -vf "fps=20,scale=960:540:flags=lanczos,tile=4x2" -an -c:v libwebp -quality 72 -compression_level 4 -start_number 0 "public/assets/film/frames-%02d.webp"
+```
 
 ## Static hosting and launch
 
