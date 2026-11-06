@@ -8,7 +8,7 @@ const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
   <div class="film-sticky">
     <div class="film-image" aria-hidden="true">
       <img src="/assets/toyota-poster.webp" alt="" width="1280" height="720" fetchpriority="high" />
-      <video src="/assets/toyota-yaris-cross.mp4" poster="/assets/toyota-poster.webp" muted playsinline preload="auto" disablepictureinpicture width="1280" height="720" tabindex="-1"></video>
+      <canvas width="960" height="540"></canvas>
     </div>
     <div class="film-shade" aria-hidden="true"></div>
     <div class="film-top wrap">
@@ -44,25 +44,25 @@ const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
 <script>
   const film = document.querySelector<HTMLElement>('[data-film]');
   if (film) {
-    const video = film.querySelector<HTMLVideoElement>('video')!;
-    const videoSource = video.src;
+    const canvas = film.querySelector<HTMLCanvasElement>('canvas')!;
+    const context = canvas.getContext('2d', { alpha: false });
     const sticky = film.querySelector<HTMLElement>('.film-sticky')!;
     const copies = Array.from(film.querySelectorAll<HTMLElement>('[data-chapter-copy]'));
     const links = Array.from(film.querySelectorAll<HTMLAnchorElement>('[data-chapter-cta]'));
     const counter = film.querySelector<HTMLElement>('[data-scene-count]')!;
     const status = film.querySelector<HTMLElement>('[data-film-status]')!;
     const count = copies.length;
-    const fps = 24;
+    // Keep the frame layout in sync with the FFmpeg command in the README.
+    const fps = 20;
+    const frameCount = 200;
+    const columns = 4;
+    const framesPerSheet = columns * 2;
+    const sheetCount = Math.ceil(frameCount / framesPerSheet);
+    const sheets = new Map<number, HTMLImageElement>();
     const introductionReveal = 0.07;
     let active = 0;
     let pending = 0;
-    let requestedFrame = -1;
-    let requestedTime: number | undefined;
-    let seekWatchdog: number | undefined;
-    let recoveryAttempted = false;
-    let recovering = false;
-    let bufferedSource: string | undefined;
-    let portraitScale = 1.58;
+    let drawnFrame = -1;
 
     function setScene(next: number, showLink: boolean) {
       if (active !== next) {
@@ -76,67 +76,42 @@ const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
       links[active].hidden = !showLink;
     }
 
-    function seek(progress: number) {
-      if (recovering || video.seeking || video.readyState < 1 || !Number.isFinite(video.duration)) return;
-      const lastFrame = Math.max(0, Math.round(video.duration * fps) - 1);
-      const frame = Math.round(progress * lastFrame);
-      if (frame === requestedFrame) return;
-      requestedFrame = frame;
-      const time = Math.min(frame / fps + (frame > 0 ? 0.001 : 0), video.duration - 0.005);
-      window.clearTimeout(seekWatchdog);
-      requestedTime = undefined;
-      if (Math.abs(video.currentTime - time) < 0.001) return;
-      // Widen before seeking forward. On reverse, keep the wider frame until the seek finishes.
-      framePortrait(time, false);
-      requestedTime = time;
-      try {
-        video.currentTime = time;
-      } catch {
-        void recoverVideo();
-        return;
-      }
-      if (!recoveryAttempted) {
-        seekWatchdog = window.setTimeout(() => {
-          if (video.seeking || video.readyState < 2) void recoverVideo();
-          else finishSeek();
-        }, 3000);
-      }
+    function loadSheet(index: number) {
+      const cached = sheets.get(index);
+      if (cached) return cached;
+
+      const image = new Image();
+      image.addEventListener('load', schedule, { once: true });
+      image.src = '/assets/film/frames-' + String(index).padStart(2, '0') + '.webp';
+      sheets.set(index, image);
+      return image;
     }
 
-    function finishSeek() {
-      if (video.seeking || recovering) return;
-      window.clearTimeout(seekWatchdog);
-      const expectedTime = requestedTime;
-      requestedTime = undefined;
-      if (!recoveryAttempted && expectedTime !== undefined && Math.abs(video.currentTime - expectedTime) > 1 / fps) {
-        void recoverVideo();
-        return;
-      }
-      framePortrait(video.currentTime);
-      schedule();
-    }
-
-    async function recoverVideo() {
-      if (recoveryAttempted) return;
-      recoveryAttempted = true;
-      recovering = true;
-      window.clearTimeout(seekWatchdog);
-      requestedTime = undefined;
-
-      // A fresh decoder with a complete local copy can seek without HTTP range requests.
-      try {
-        const response = await fetch(videoSource, { signal: AbortSignal.timeout(8000) });
-        if (response.ok) bufferedSource = URL.createObjectURL(await response.blob());
-      } catch {
-        // Retry the original source if fetching a complete copy failed.
+    function drawFrame(progress: number) {
+      if (!context) return;
+      const frame = Math.round(progress * (frameCount - 1));
+      const sheetIndex = Math.floor(frame / framesPerSheet);
+      // Keep the current sheet and its neighbours ready for scrolling in either direction.
+      const sheet = loadSheet(sheetIndex);
+      if (sheetIndex > 0) loadSheet(sheetIndex - 1);
+      if (sheetIndex < sheetCount - 1) loadSheet(sheetIndex + 1);
+      for (const index of sheets.keys()) {
+        if (Math.abs(index - sheetIndex) > 1) sheets.delete(index);
       }
 
-      film?.classList.remove('film-ready');
-      requestedFrame = -1;
-      if (bufferedSource) video.src = bufferedSource;
-      else video.load();
-      recovering = false;
-      schedule();
+      // Hold the last drawn frame (or the poster) while a new sheet loads.
+      if (frame === drawnFrame || !sheet.complete || !sheet.naturalWidth) return;
+      const tile = frame % framesPerSheet;
+      const { width, height } = canvas;
+      const x = (tile % columns) * width;
+      const y = Math.floor(tile / columns) * height;
+      context.drawImage(sheet, x, y, width, height, 0, 0, width, height);
+      drawnFrame = frame;
+
+      // Enlarge the assembled car in portrait and widen as the parts separate.
+      const scale = 1 + 0.58 * Math.max(0, 1 - frame / (fps * 5));
+      film?.style.setProperty('--portrait-scale', scale.toFixed(3));
+      film?.classList.add('film-ready');
     }
 
     function update() {
@@ -152,47 +127,16 @@ const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
       setScene(scene, progress >= introductionReveal);
       film.style.setProperty('--film-progress', String(progress));
       // Disassemble through halfway, then retrace the same frames as scrolling continues.
-      seek(1 - Math.abs(2 * progress - 1));
+      drawFrame(1 - Math.abs(2 * progress - 1));
     }
 
     function schedule() {
       if (!pending) pending = requestAnimationFrame(update);
     }
 
-    function revealVideo() {
-      film?.classList.add('film-ready');
-      framePortrait(video.currentTime);
-      schedule();
-    }
-
-    function framePortrait(time: number, allowZoomIn = true) {
-      // The early frames have room to crop the studio sides. Widen as the parts separate.
-      const scale = 1 + 0.58 * Math.max(0, 1 - time / 5);
-      if (scale === portraitScale || (!allowZoomIn && scale > portraitScale)) return;
-      portraitScale = scale;
-      film?.style.setProperty('--portrait-scale', scale.toFixed(3));
-    }
-
-    video.addEventListener('loadedmetadata', schedule);
-    video.addEventListener('loadeddata', revealVideo);
-    video.addEventListener('seeked', finishSeek);
-    video.addEventListener('error', () => {
-      film.classList.remove('film-ready');
-      portraitScale = 1.58;
-      film.style.removeProperty('--portrait-scale');
-      if (bufferedSource) {
-        URL.revokeObjectURL(bufferedSource);
-        bufferedSource = undefined;
-        requestedFrame = -1;
-        video.src = videoSource;
-      } else {
-        void recoverVideo();
-      }
-    });
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule, { passive: true });
     window.addEventListener('pageshow', schedule);
-    if (video.readyState >= 2) revealVideo();
     schedule();
   }
 </script>
