@@ -3,8 +3,10 @@ import '../styles/film.css';
 import { chapters } from '../lib/content';
 import Icon from './Icon.astro';
 const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
+const previewPath = '/assets/film/preview.webp';
 ---
-<section class="film" data-film data-state="start" aria-label="The PARC repair story">
+<link rel="preload" as="image" href={previewPath} fetchpriority="high" />
+<section class="film" data-film data-preview={previewPath} data-state="start" aria-label="The PARC repair story">
   <div class="film-sticky">
     <div class="film-image" aria-hidden="true">
       <img src="/assets/toyota-poster.webp" alt="" width="1280" height="720" fetchpriority="high" />
@@ -58,11 +60,21 @@ const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
     const columns = 4;
     const framesPerSheet = columns * 2;
     const sheetCount = Math.ceil(frameCount / framesPerSheet);
-    const sheets = new Map<number, HTMLImageElement>();
+    // The compact atlas keeps the whole timeline available while detail sheets decode.
+    // Generate it from the same 20 fps source with scale=192:108 and tile=20x10.
+    const previewColumns = 20;
+    const previewWidth = 192;
+    const previewHeight = 108;
+    type Sheet = { image: HTMLImageElement; ready: boolean };
+    const sheets = new Map<number, Sheet>();
     const introductionReveal = 0.07;
     let active = 0;
     let pending = 0;
+    let requestedFrame = -1;
+    let frameDirection = 1;
     let drawnFrame = -1;
+    let drawnSheet: Sheet | undefined;
+    const preview = context ? requestSheet(film.dataset.preview!, 'high') : undefined;
 
     function setScene(next: number, showLink: boolean) {
       if (active !== next) {
@@ -76,37 +88,64 @@ const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
       links[active].hidden = !showLink;
     }
 
-    function loadSheet(index: number) {
+    function requestSheet(url: string, priority: 'high' | 'auto' | 'low'): Sheet {
+      const image = new Image();
+      const sheet = { image, ready: false };
+      image.decoding = 'async';
+      image.fetchPriority = priority;
+      image.addEventListener('load', async () => {
+        // Decode outside the scroll callback so a new sheet can be drawn without a synchronous decode.
+        if (typeof image.decode === 'function') await image.decode().catch(() => {});
+        sheet.ready = image.naturalWidth > 0;
+        schedule();
+      }, { once: true });
+      image.src = url;
+      return sheet;
+    }
+
+    function loadSheet(index: number, priority: 'auto' | 'low') {
       const cached = sheets.get(index);
       if (cached) return cached;
-
-      const image = new Image();
-      image.addEventListener('load', schedule, { once: true });
-      image.src = '/assets/film/frames-' + String(index).padStart(2, '0') + '.webp';
-      sheets.set(index, image);
-      return image;
+      const sheet = requestSheet('/assets/film/frames-' + String(index).padStart(2, '0') + '.webp', priority);
+      sheets.set(index, sheet);
+      return sheet;
     }
 
     function drawFrame(progress: number) {
       if (!context) return;
       const frame = Math.round(progress * (frameCount - 1));
       const sheetIndex = Math.floor(frame / framesPerSheet);
-      // Keep the current sheet and its neighbours ready for scrolling in either direction.
-      const sheet = loadSheet(sheetIndex);
-      if (sheetIndex > 0) loadSheet(sheetIndex - 1);
-      if (sheetIndex < sheetCount - 1) loadSheet(sheetIndex + 1);
-      for (const index of sheets.keys()) {
-        if (Math.abs(index - sheetIndex) > 1) sheets.delete(index);
+      const detail = loadSheet(sheetIndex, 'auto');
+      if (frame !== requestedFrame) {
+        frameDirection = Math.sign(frame - requestedFrame);
+        requestedFrame = frame;
+        // Warm the next two sheets and retain one behind, including when the sequence reverses.
+        const first = Math.max(0, sheetIndex + (frameDirection > 0 ? -1 : -2));
+        const last = Math.min(sheetCount - 1, sheetIndex + (frameDirection > 0 ? 2 : 1));
+        for (const index of sheets.keys()) {
+          if (index < first || index > last) sheets.delete(index);
+        }
+        for (let offset = 1; offset <= 2; offset++) {
+          const ahead = sheetIndex + offset * frameDirection;
+          if (ahead >= first && ahead <= last) loadSheet(ahead, 'low');
+        }
+        const behind = sheetIndex - frameDirection;
+        if (behind >= first && behind <= last) loadSheet(behind, 'low');
       }
 
-      // Hold the last drawn frame (or the poster) while a new sheet loads.
-      if (frame === drawnFrame || !sheet.complete || !sheet.naturalWidth) return;
-      const tile = frame % framesPerSheet;
+      const sheet = detail.ready ? detail : preview;
+      if (!sheet?.ready || (frame === drawnFrame && sheet === drawnSheet)) return;
+      const compact = sheet === preview;
+      const tile = compact ? frame : frame % framesPerSheet;
       const { width, height } = canvas;
-      const x = (tile % columns) * width;
-      const y = Math.floor(tile / columns) * height;
-      context.drawImage(sheet, x, y, width, height, 0, 0, width, height);
+      const sourceColumns = compact ? previewColumns : columns;
+      const sourceWidth = compact ? previewWidth : width;
+      const sourceHeight = compact ? previewHeight : height;
+      const x = (tile % sourceColumns) * sourceWidth;
+      const y = Math.floor(tile / sourceColumns) * sourceHeight;
+      context.drawImage(sheet.image, x, y, sourceWidth, sourceHeight, 0, 0, width, height);
       drawnFrame = frame;
+      drawnSheet = sheet;
 
       // Enlarge the assembled car in portrait and widen as the parts separate.
       const scale = 1 + 0.58 * Math.max(0, 1 - frame / (fps * 5));
