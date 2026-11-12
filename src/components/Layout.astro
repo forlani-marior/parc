@@ -40,7 +40,7 @@ const schema = {
     <meta property="og:locale" content="en_IE" />
     <meta property="og:url" content={canonical.href} />
     <meta property="og:image" content={new URL(image, origin).href} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg?v=blue" type="image/svg+xml" />
     <link rel="preload" href="/assets/manrope.woff2" as="font" type="font/woff2" crossorigin />
     {home && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
     <noscript><style>.film{height:auto!important}.film-sticky{position:relative!important}.film-actions,.film-progress,.menu-toggle{display:none!important}.main-nav{display:flex!important;position:static!important;background:none!important}.site-head{position:absolute!important}</style></noscript>
