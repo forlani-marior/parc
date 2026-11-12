@@ -1,15 +1,24 @@
 ---
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import '../styles/film.css';
 import { chapters } from '../lib/content';
 import Icon from './Icon.astro';
 const sceneNumber = (index: number) => String(index + 1).padStart(2, '0');
-const previewPath = '/assets/film/preview.webp';
+// The host caches film images as immutable. Change their URLs with the source clip.
+const filmVersion = createHash('sha256')
+  .update(readFileSync('public/assets/toyota-yaris-cross.mp4'))
+  .digest('hex')
+  .slice(0, 12);
+const previewPath = '/assets/film/preview.webp?v=' + filmVersion;
+const posterPath = '/assets/toyota-poster.webp?v=' + filmVersion;
 ---
+<link rel="preload" as="image" href={posterPath} fetchpriority="high" />
 <link rel="preload" as="image" href={previewPath} fetchpriority="high" />
-<section class="film" data-film data-preview={previewPath} data-state="start" aria-label="The PARC repair story">
+<section class="film" data-film data-film-version={filmVersion} data-preview={previewPath} data-state="start" aria-label="The PARC repair story">
   <div class="film-sticky">
     <div class="film-image" aria-hidden="true">
-      <img src="/assets/toyota-poster.webp" alt="" width="1280" height="720" fetchpriority="high" />
+      <img src={posterPath} alt="" width="1280" height="720" fetchpriority="high" />
       <canvas width="960" height="540"></canvas>
     </div>
     <div class="film-shade" aria-hidden="true"></div>
@@ -106,7 +115,8 @@ const previewPath = '/assets/film/preview.webp';
     function loadSheet(index: number, priority: 'auto' | 'low') {
       const cached = sheets.get(index);
       if (cached) return cached;
-      const sheet = requestSheet('/assets/film/frames-' + String(index).padStart(2, '0') + '.webp', priority);
+      const path = '/assets/film/frames-' + String(index).padStart(2, '0') + '.webp?v=' + film.dataset.filmVersion;
+      const sheet = requestSheet(path, priority);
       sheets.set(index, sheet);
       return sheet;
     }
